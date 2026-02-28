@@ -1,0 +1,20 @@
+Designator,Quantity,MPN,Description,Manufacturer
+C1,1,UUA1V4R7MCL1GS,4mmD 5.8mmL 4.7u 20% 3000Hr 35VDC,Nichicon
+"C2, C3, C4, C5",4,GRM188R61C105KA12J,0603 1u 10% X5R 16VDC,Murata
+"CP1, CP2, CP3, CP4, CP5",5,GRM188R72A104KA35D,0603 0.1u 10% X7R 100VDC,Murata
+"D1, D2, D3, D4",4,1N4148WS,Small Signal Diode 75V 150mA,ON Semiconductor
+Q1,1,2N7002,N-Channel MOSFET SOT-23,ON Semiconductor
+R1,1,ESR25JZPJ510,1210 51 5% 1W Anti Surge,ROHM
+"R2, R3, R4, R5",4,RK73B1JTTD103J,0603 10k 5% 0.1W,KOA
+"R6, R7, R8, R9",4,RK73B1JTTD182J,0603 1.8k 5% 0.1W,KOA
+"R10, R11, R12, R13",4,RK73B1JTTD332J,0603 3.3k 5% 0.1W,KOA
+"R14, R15, R16, R17, R19",5,RK73B1JTTD102J,0603 1k 5% 0.125W,KOA
+R18,1,RK73B1JTTD100J,0603 10 5% 0.125W,KOA
+R20,1,RK73B1JTTD473J,0603 47k 5% 0.1W,KOA
+U1,1,HFBR-2521Z,Fiber-Optic Receiver 5Mbaud 20m,Broadcom
+U2,1,HFBR-1521Z,Fiber-Optic Transmitter 5Mbaud 20m,Broadcom
+U3,1,096IN-TFT-4KEY,0.96in IPS TFT Display 4 keys ST7735S,-
+U4,1,74AHCT14D,Hex inverting Schmitt trigger,Nexperia
+U5,1,SN74LVC1G125DBVR,Single Bus Buffer Gate SOT-23-5,Texas Instruments
+U6,1,SN75451BDR,Dual Peripheral Drivers,Texas Instruments
+-,As required,HFBR-RNSXXXZ,Plastic Optical Fiber Cable,Broadcom
