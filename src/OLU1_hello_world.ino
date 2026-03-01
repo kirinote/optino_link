@@ -12,6 +12,16 @@
 
 #include "OLU.h"
 
+/* Parser context */
+static byte pktIndex = 0;
+static byte pktCRC = 0;
+
+/* Parser reset */
+inline void resetParser() {
+  pktIndex = 0;
+  pktCRC = 0;
+}
+
 void setup(void) {
 
   restoreUID();
@@ -30,8 +40,6 @@ void loop() {
     storeRX(OptLink.read());
   }
 
-  static byte pktIndex = 0;
-  static byte crc = 0;
   byte b;
 
   /* Fixed-length frame parser
@@ -41,10 +49,16 @@ void loop() {
    */
   while (readRX(b)) {
 
+    /* Bounds check */
+    if (pktIndex >= PACKET_SIZE) {
+      resetParser();
+      continue;
+    }
+
     if (pktIndex == 0) {
       if (b == HEADER) {
         rxd[0] = b;
-        crc = crc8_table_local[b];
+        pktCRC = crc8_table_local[b];
         pktIndex = 1;
       }
       continue;
@@ -53,12 +67,12 @@ void loop() {
     rxd[pktIndex] = b;
 
     if (pktIndex < DATA_LENGTH) {
-      crc = crc8_table_local[crc ^ b];
+      pktCRC = crc8_table_local[pktCRC ^ b];
       pktIndex++;
     } else {
-      if (crc == b) {
+      if (pktCRC == b) {
         parsePacket();
-        pktIndex = 0;
+        resetParser();
       } else {
 
         /* CRC failure:
@@ -72,10 +86,10 @@ void loop() {
 
         if (b == HEADER) {
           rxd[0] = HEADER;
-          crc = crc8_table_local[HEADER];
+          pktCRC = crc8_table_local[HEADER];
           pktIndex = 1;
         } else {
-          pktIndex = 0;
+          resetParser();
         }
       }
     }
