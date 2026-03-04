@@ -24,6 +24,12 @@ inline void resetParser() {
 
 void setup(void) {
 
+#ifdef ENABLE_PC_COMM
+  Serial.begin(115200);
+  uint32_t start = millis();
+  while (!Serial && (millis() - start < 5000)) {};
+#endif
+
   restoreUID();
   initPins();
   initDisplay();
@@ -34,6 +40,11 @@ void setup(void) {
 }
 
 void loop() {
+
+#ifdef ENABLE_PC_COMM
+  /* USB to Optical Ring bridge */
+  handleUsbToRing();
+#endif
 
   /* Stage UART RX bytes into ring buffer (polled mode) */
   while (OptLink.available()) {
@@ -81,7 +92,7 @@ void loop() {
          * Partial or lost frames may occur under high load
          * or burst errors.
          */
-        crcErr += (crcErr != 0xFF);
+        if (crcErr < 0xFF) crcErr++;
         creUpdated = 1;
 
         if (b == HEADER) {
@@ -118,8 +129,10 @@ void loop() {
       crcErr = 0;
 
       /* Reset UID to unassigned */
-      uid = 0xFF;
-      storeUID();
+      if (uid != 0xFF) {
+        uid = 0xFF;
+        storeUID();
+      }
       uidUpdated = 1;
       creUpdated = 1;
     }
@@ -127,9 +140,17 @@ void loop() {
 
   /* Button polling (main loop only):
    * Detects rising edge, triggers action()
-   * Hardware debounce assumed
+   *
+   * Design prerequisite:
+   * Button inputs must be externally debounced.
+   * This module does not implement debounce logic.
    */
   checkButton();
+
+#ifdef ENABLE_PC_COMM
+  /* Optical Ring to USB bridge */
+  handleRingToUsb();
+#endif
 }
 
 /* Protocol State Flow Overview
@@ -174,6 +195,7 @@ void loop() {
  */
 void parsePacket() {
 
+  bool consumed = 0;
   bool fromMe = (rxd[2] == uid);
   bool notForMe = (rxd[1] != uid && rxd[1] != ACT_UNITS);
   bool notAssign = (rxd[3] != ASSIGN);
@@ -205,11 +227,6 @@ void parsePacket() {
    */
   else if (rxd[3] == ASSIGN) {
 
-    if (!assignLock) {
-      assignLock = 1;
-      assignST = millis();
-    }
-
     /* Host completion detection */
     if (newHost && rxd[2] == uid) {
       assignLock = 0;
@@ -226,8 +243,11 @@ void parsePacket() {
 
     /* Downstream re-enumeration */
     if (newHost == 0) {
-
       if (rxd[4] < UID_MAX) {
+        if (!assignLock) {
+          assignLock = 1;
+          assignST = millis();
+        }
         txdClear();
         rxd2txd();
 
@@ -236,7 +256,6 @@ void parsePacket() {
         txd[4] = uid;
         txd[DATA_LENGTH] = calcCRC8(txd, DATA_LENGTH);
         OptLink.write(txd, PACKET_SIZE);
-        storeUID();
         randVal = randomGen();
         crcErr = 0;
         uidUpdated = 1;
@@ -249,12 +268,20 @@ void parsePacket() {
 
   else if (rxd[3] == ASSIGN_DONE) {
     assignLock = 0;
-    OptLink.write(rxd, PACKET_SIZE);
+    if (uid == REPEATER || rxd[2] != uid) {
+      OptLink.write(rxd, PACKET_SIZE);
+    }
+#ifdef PERSISTENT_UID
+    if (uid != 0xFF && uid != ACT_UNITS) {
+      storeUID();
+    }
+#endif
   }
 
   else if (rxd[1] == uid && rxd[3] == OUT_CTRL) {
     FourBitOut(rxd[4] & 0x0F);
     rxdUpdated = 1;
+    consumed = 1;
   }
 
   /* Transport characteristics:
@@ -269,13 +296,25 @@ void parsePacket() {
     userData[0] = randVal;
     optTX(rxd[2], RESPONSE);
     rxdUpdated = 1;
+    consumed = 1;
   }
 
   else if (rxd[1] == uid && rxd[3] == RESPONSE) {
     /* Store the application payload in the work array */
     rxd2work();
     rxdUpdated = 1;
+    consumed = 1;
   }
+
+// Single-slot overwrite buffer:
+// Always stores the latest consumed packet.
+// Older packets are intentionally overwritten
+// if USB transmission is delayed.
+#ifdef ENABLE_PC_COMM
+  if (consumed) {
+    copyData(bridgeRx, rxd);
+  }
+#endif
 }
 
 void action(int buttonIndex) {
@@ -283,15 +322,7 @@ void action(int buttonIndex) {
   switch (buttonIndex) {
     case 0:  // K1
       if (assignLock) return;
-
-      assignLock = 1;
-      assignST = millis();
-      newHost = 1;
-      uid = 0x01;
-      storeUID();
-      userData[0] = uid;
-      optTX(ACT_UNITS, ASSIGN);
-      uidUpdated = 1;
+      startAssignAsHost();
       break;
 
     case 1:  // K2

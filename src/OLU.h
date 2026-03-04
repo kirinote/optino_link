@@ -20,6 +20,17 @@
  * Concurrent ASSIGN frames from multiple hosts
  * are undefined.
  *
+ * USB Bridge Assumption:
+ * USB (PC link) is treated as a trusted channel.
+ * CRC validation is NOT performed on USB ingress.
+ * CRC protection applies only to the optical ring segment.
+ * CRC is regenerated on USB-to-ring forwarding.
+ *
+ * Rationale:
+ * The USB link is assumed to be reliable and point-to-point.
+ * End-to-end integrity protection is required only for
+ * the optical ring network where physical errors may occur.
+ *
  * Packet Structure (fixed length):
  * Initial definition: 6 bytes total
  *
@@ -70,7 +81,9 @@
 #include <Adafruit_GFX.h>
 #include <Adafruit_ST7735.h>
 
-#define DEMO_MODE
+/* Conditional Compilation */
+//#define PERSISTENT_UID
+#define ENABLE_PC_COMM
 
 #define TFT_SCLK 13
 #define TFT_MOSI 11
@@ -181,6 +194,11 @@ byte txd[PACKET_SIZE];        // Transmit packet
 byte work[PACKET_SIZE];       // Stored working data
 byte crc8_table_local[256];   // CRC table copy on SRAM
 uint32_t assignST = 0;        // Assign start time
+
+#ifdef ENABLE_PC_COMM
+byte bridgeTx[DATA_LENGTH] = { 0 };  // USB to Ring staging buffer, CRC excluded
+byte bridgeRx[DATA_LENGTH] = { 0 };  // Ring to USB single-slot buffer, CRC excluded
+#endif
 
 const byte crc8_table[256] PROGMEM = {
   0x00, 0x07, 0x0E, 0x09, 0x1C, 0x1B, 0x12, 0x15,

@@ -172,6 +172,103 @@ void optTX(byte dest, byte cmd) {
   OptLink.write(txd, PACKET_SIZE);
 }
 
+/* Host-side ASSIGN initiation
+ *
+ * Behavior:
+ *   - Enters ASSIGN state (locks process).
+ *   - Sets this unit UID to 0x01 (host base).
+ *   - Sends ASSIGN with payload = current UID.
+ *
+ * Protocol rule:
+ *   Downstream units overwrite their UID with
+ *   (received payload + 1) and forward the frame.
+ *
+ * Completion:
+ *   Enumeration completes when the frame
+ *   returns to this unit.
+ *
+ * Timeout supervision is handled in loop().
+ */
+void startAssignAsHost() {
+  assignLock = 1;
+  assignST = millis();
+  newHost = 1;
+  uid = 0x01;
+  userData[0] = uid;
+  optTX(ACT_UNITS, ASSIGN);
+  uidUpdated = 1;
+  rxdUpdated = 1;
+  creUpdated = 1;
+  usgUpdated = 1;
+}
+
+/* USB to Optical Ring bridge
+ *
+ * Behavior:
+ *   - Waits for DATA_LENGTH bytes from USB.
+ *   - Validates HEADER only (no CRC on USB side).
+ *   - If ASSIGN and no active process:
+ *       starts host-side enumeration.
+ *   - Otherwise:
+ *       regenerates CRC and forwards to ring.
+ *
+ * Design rule:
+ *   USB link is trusted.
+ *   CRC protection applies only to ring segment.
+ *
+ * Note:
+ *   Input is fixed-length and blocking only
+ *   when sufficient bytes are available.
+ */
+#ifdef ENABLE_PC_COMM
+void handleUsbToRing() {
+  if (Serial.available() < DATA_LENGTH) {
+    return;
+  }
+  for (byte i = 0; i < DATA_LENGTH; i++) {
+    bridgeTx[i] = Serial.read();
+  }
+  if (bridgeTx[0] != HEADER) {
+    clearData(bridgeTx);
+    return;
+  }
+  if (bridgeTx[3] == ASSIGN) {
+    if (!assignLock) {
+      startAssignAsHost();
+    }
+  } else {
+    copyData(txd, bridgeTx);
+    txd[DATA_LENGTH] = calcCRC8(txd, DATA_LENGTH);
+    OptLink.write(txd, PACKET_SIZE);
+  }
+  clearData(bridgeTx);
+}
+#endif
+
+/* Optical Ring to USB bridge
+ *
+ * Behavior:
+ *   - Sends latest consumed packet to USB.
+ *   - Transfers DATA_LENGTH bytes (CRC excluded).
+ *
+ * Buffer policy:
+ *   Single-slot overwrite buffer.
+ *   Older packets may be lost if USB is busy.
+ *
+ * Assumption:
+ *   USB link is reliable and point-to-point.
+ */
+#ifdef ENABLE_PC_COMM
+void handleRingToUsb() {
+  if (Serial && bridgeRx[0] == HEADER) {
+    if (Serial.availableForWrite() >= DATA_LENGTH) {
+      Serial.write(bridgeRx, DATA_LENGTH);
+      clearData(bridgeRx);
+    }
+  }
+}
+#endif
+
 void TFTupdUID() {
   tft.setCursor(80, 0);
   tft.print("UID:");
@@ -216,7 +313,7 @@ void TFTupdCRCErr() {
 void TFTupdUsage() {
   tft.setCursor(0, 40);
   tft.print("USG:");
-  usage = getRXBufUsage();
+  usage = getRXBufUsagePercent();
   if (rxOVFlow > 0) {
     tft.println("OF");
   } else {
@@ -277,45 +374,71 @@ byte calcCRC8(const byte *data, byte len) {
   return crc;
 }
 
-byte getRXBufUsage() {
+byte getRXBufUsagePercent() {
   uint16_t used = (rxHead - rxTail) & RX_BUF_MASK;
   return (used * 100UL) / RX_BUF_SIZE;
 }
 
 void rxd2txd() {
-  memcpy(txd, rxd, PACKET_SIZE);
+  copyPacket(txd, rxd);
 }
 
 void rxd2work() {
-  memcpy(work, rxd, PACKET_SIZE);
+  copyPacket(work, rxd);
 }
 
 void rxdClear() {
-  memset(rxd, 0, sizeof(rxd));
+  clearPacket(rxd);
 }
 
 void txdClear() {
-  memset(txd, 0, sizeof(txd));
+  clearPacket(txd);
 }
 
 void workClear() {
-  memset(work, 0, sizeof(work));
+  clearPacket(work);
+}
+
+/* Memory utility wrappers
+ *
+ * Rationale:
+ *   - Centralizes memory operations.
+ *   - Improves maintainability.
+ *   - Allows future instrumentation (debug, tracing).
+ */
+void copyPacket(byte *dst, const byte *src) {
+  memcpy(dst, src, PACKET_SIZE);
+}
+
+void copyData(byte *dst, const byte *src) {
+  memcpy(dst, src, DATA_LENGTH);
+}
+
+void clearPacket(byte *buf) {
+  memset(buf, 0, PACKET_SIZE);
+}
+
+void clearData(byte *buf) {
+  memset(buf, 0, DATA_LENGTH);
 }
 
 void storeUID() {
-#ifndef DEMO_MODE
+#ifdef PERSISTENT_UID
   EEPROM.update(0, uid);
 #endif
 }
 
 void restoreUID() {
-#ifndef DEMO_MODE
-  uid = EEPROM.read(0);
-#else
+#ifdef PERSISTENT_UID
+  byte stored = EEPROM.read(0);
 
-  /* In demo mode, the UID is set to
-   * unassigned on boot.
-   */
+  /* 0xFE is broadcast-only and must never be stored */
+  if (stored == ACT_UNITS) {
+    uid = 0xFF;
+  } else {
+    uid = stored;
+  }
+#else
   uid = 0xFF;
 #endif
 }
