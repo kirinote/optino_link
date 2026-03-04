@@ -81,7 +81,7 @@
 #include <Adafruit_GFX.h>
 #include <Adafruit_ST7735.h>
 
-/* Conditional Compilation */
+/* Conditional compilation */
 //#define PERSISTENT_UID
 #define ENABLE_PC_COMM
 
