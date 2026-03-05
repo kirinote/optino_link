@@ -306,10 +306,11 @@ void parsePacket() {
     consumed = 1;
   }
 
-// Single-slot overwrite buffer:
-// Always stores the latest consumed packet.
-// Older packets are intentionally overwritten
-// if USB transmission is delayed.
+/* Single-slot overwrite buffer:
+ * Always stores the latest consumed packet.
+ * Older packets are intentionally overwritten
+ * if USB transmission is delayed.
+ */
 #ifdef ENABLE_PC_COMM
   if (consumed) {
     copyData(bridgeRx, rxd);
