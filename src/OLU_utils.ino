@@ -507,6 +507,7 @@ void toggleRole() {
     uidUpdated = 1;
     creUpdated = 1;
     clearDisplay();
+    renderLabels();
     TFTupdUID();
     TFTupdCRCErr();
   } else if (uid == REPEATER) {
@@ -521,6 +522,7 @@ void toggleRole() {
     usgUpdated = 1;
     rndUpdated = 1;
     clearDisplay();
+    renderLabels();
     initGUI();
   }
 }
