@@ -12,7 +12,7 @@
 
 /* GUI render cache
  * Stores last values drawn on TFT.
- * 'valid' flags guarantee first render.
+ * 'valid' flags start false to force the first render.
  */
 typedef struct {
   bool uidValid;
@@ -50,7 +50,7 @@ void initPins() {
 }
 
 void initDisplay() {
-  analogWrite(TFT_BL, BACKLIGHT_MIN);
+  analogWrite(TFT_BL, BACKLIGHT_DIM);
   tft.sendCommand(ST77XX_SWRESET);
   delay(150);
 
@@ -68,8 +68,24 @@ void initDisplay() {
   analogWrite(TFT_BL, BACKLIGHT_MAX);
 }
 
+void renderLabels() {
+  tft.setCursor(0, 0);
+  tft.print("RXD:");
+  tft.setCursor(0, 20);
+  tft.print("CRE:");
+  tft.setCursor(0, 40);
+  tft.print("USG:");
+  tft.setCursor(80, 0);
+  tft.print("UID:");
+  tft.setCursor(80, 20);
+  tft.print("RND:");
+}
+
+/* Clear entire display.
+ * This removes all labels. Call renderLabels() afterwards.
+ */
 void clearDisplay() {
-  analogWrite(TFT_BL, BACKLIGHT_MIN);
+  analogWrite(TFT_BL, BACKLIGHT_DIM);
   tft.fillScreen(ST77XX_BLACK);
   analogWrite(TFT_BL, BACKLIGHT_MAX);
 }
@@ -311,8 +327,7 @@ void TFTupdUID() {
   if (guiCache.uidValid && guiCache.uid == uid) return;
   guiCache.uid = uid;
   guiCache.uidValid = 1;
-  tft.setCursor(80, 0);
-  tft.print("UID:");
+  tft.setCursor(128, 0);
   if (uid == 0xFF) {
     tft.setTextColor(ST77XX_ORANGE, ST77XX_BLACK);
     printHex2(uid);
@@ -334,8 +349,7 @@ void TFTupdRXData() {
   if (guiCache.rxdValid && guiCache.rxd == value) return;
   guiCache.rxd = value;
   guiCache.rxdValid = 1;
-  tft.setCursor(0, 0);
-  tft.print("RXD:");
+  tft.setCursor(48, 0);
   printHex2(value);
 }
 
@@ -343,8 +357,7 @@ void TFTupdCRCErr() {
   if (guiCache.crcValid && guiCache.crc == crcErr) return;
   guiCache.crc = crcErr;
   guiCache.crcValid = 1;
-  tft.setCursor(0, 20);
-  tft.print("CRE:");
+  tft.setCursor(48, 20);
   printHex2(crcErr);
 }
 
@@ -353,8 +366,7 @@ void TFTupdUsage() {
   if (guiCache.usgValid && guiCache.usg == current && rxOVFlow == 0) return;
   guiCache.usg = current;
   guiCache.usgValid = 1;
-  tft.setCursor(0, 40);
-  tft.print("USG:");
+  tft.setCursor(48, 40);
   if (rxOVFlow > 0) {
     tft.print("OF");
   } else {
@@ -366,8 +378,7 @@ void TFTupdRNData() {
   if (guiCache.rndValid && guiCache.rnd == randVal) return;
   guiCache.rnd = randVal;
   guiCache.rndValid = 1;
-  tft.setCursor(80, 20);
-  tft.print("RND:");
+  tft.setCursor(128, 20);
   printHex2(randVal);
 }
 

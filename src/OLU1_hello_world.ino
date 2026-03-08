@@ -33,6 +33,7 @@ void setup(void) {
   restoreUID();
   initPins();
   initDisplay();
+  renderLabels();
   initCRCTable();
   randVal = randomGen();
   initGUI();

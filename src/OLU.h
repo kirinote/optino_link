@@ -128,7 +128,7 @@
  * between the drain and source of the MOSFET.
  */
 #define BACKLIGHT_MAX 0x00  // ON
-#define BACKLIGHT_MIN 0xFF  // OFF
+#define BACKLIGHT_DIM 0xFF  // OFF
 
 #define ASSIGN_TIMEOUT 500UL
 
