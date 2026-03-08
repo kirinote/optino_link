@@ -10,6 +10,25 @@
  * https://opensource.org/licenses/MIT
  */
 
+/* GUI render cache
+ * Stores last values drawn on TFT.
+ * 'valid' flags guarantee first render.
+ */
+typedef struct {
+  bool uidValid;
+  bool rxdValid;
+  bool crcValid;
+  bool usgValid;
+  bool rndValid;
+  byte uid;
+  byte rxd;
+  byte crc;
+  byte usg;
+  byte rnd;
+} GuiCache;
+
+static GuiCache guiCache = { 0 };
+
 /* Electrical characteristic on A0-A3:
  * Active-high digital input.
  * The hardware debounce is required.
@@ -73,41 +92,6 @@ void initCRCTable() {
 
 byte randomGen() {
   return (byte)random(0, 256);
-}
-
-void initGUI() {
-  TFTupdUID();
-  TFTupdRXData();
-  TFTupdCRCErr();
-  TFTupdUsage();
-  TFTupdRNData();
-}
-
-/* GUI update flags:
- * Set by protocol handlers; cleared by updateGUI()
- * Heavy SPI activity may delay main loop UART processing
- */
-void updateGUI() {
-  if (uidUpdated) {
-    TFTupdUID();
-    uidUpdated = 0;
-  }
-  if (rxdUpdated) {
-    TFTupdRXData();
-    rxdUpdated = 0;
-  }
-  if (creUpdated) {
-    TFTupdCRCErr();
-    creUpdated = 0;
-  }
-  if (usgUpdated) {
-    TFTupdUsage();
-    usgUpdated = 0;
-  }
-  if (rndUpdated) {
-    TFTupdRNData();
-    rndUpdated = 0;
-  }
 }
 
 /* Ring buffer for UART staging (polled context only)
@@ -269,23 +253,48 @@ void handleRingToUsb() {
 }
 #endif
 
-void TFTupdUID() {
-  tft.setCursor(80, 0);
-  tft.print("UID:");
-  if (uid == 0xFF) {
-    tft.setTextColor(ST77XX_ORANGE, ST77XX_BLACK);
-    printHex2(uid);
-  } else if (uid >= 0x01 && uid <= UID_MAX) {
-    tft.setTextColor(ST77XX_YELLOW, ST77XX_BLACK);
-    printHex2(uid);
-  } else if (uid == 0x00) {
-    tft.setTextColor(ST77XX_GREEN, ST77XX_BLACK);
-    tft.println("RP");
-  } else {
-    tft.setTextColor(ST77XX_RED, ST77XX_BLACK);
-    printHex2(uid);
+void resetGUICache() {
+  guiCache.uidValid = 0;
+  guiCache.rxdValid = 0;
+  guiCache.crcValid = 0;
+  guiCache.usgValid = 0;
+  guiCache.rndValid = 0;
+}
+
+void initGUI() {
+  resetGUICache();
+  TFTupdUID();
+  TFTupdRXData();
+  TFTupdCRCErr();
+  TFTupdUsage();
+  TFTupdRNData();
+}
+
+/* GUI update flags:
+ * Set by protocol handlers; cleared by updateGUI()
+ * Heavy SPI activity may delay main loop UART processing
+ */
+void updateGUI() {
+  if (uidUpdated) {
+    TFTupdUID();
+    uidUpdated = 0;
   }
-  tft.setTextColor(ST77XX_WHITE, ST77XX_BLACK);
+  if (rxdUpdated) {
+    TFTupdRXData();
+    rxdUpdated = 0;
+  }
+  if (creUpdated) {
+    TFTupdCRCErr();
+    creUpdated = 0;
+  }
+  if (usgUpdated) {
+    TFTupdUsage();
+    usgUpdated = 0;
+  }
+  if (rndUpdated) {
+    TFTupdRNData();
+    rndUpdated = 0;
+  }
 }
 
 void printHex2(byte value) {
@@ -298,34 +307,68 @@ void printDec2(byte value) {
   tft.print(value);
 }
 
+void TFTupdUID() {
+  if (guiCache.uidValid && guiCache.uid == uid) return;
+  guiCache.uid = uid;
+  guiCache.uidValid = 1;
+  tft.setCursor(80, 0);
+  tft.print("UID:");
+  if (uid == 0xFF) {
+    tft.setTextColor(ST77XX_ORANGE, ST77XX_BLACK);
+    printHex2(uid);
+  } else if (uid >= 0x01 && uid <= UID_MAX) {
+    tft.setTextColor(ST77XX_YELLOW, ST77XX_BLACK);
+    printHex2(uid);
+  } else if (uid == 0x00) {
+    tft.setTextColor(ST77XX_GREEN, ST77XX_BLACK);
+    tft.print("RP");
+  } else {
+    tft.setTextColor(ST77XX_RED, ST77XX_BLACK);
+    printHex2(uid);
+  }
+  tft.setTextColor(ST77XX_WHITE, ST77XX_BLACK);
+}
+
 void TFTupdRXData() {
+  byte value = rxd[4];
+  if (guiCache.rxdValid && guiCache.rxd == value) return;
+  guiCache.rxd = value;
+  guiCache.rxdValid = 1;
   tft.setCursor(0, 0);
   tft.print("RXD:");
-  printHex2(rxd[4]);
+  printHex2(value);
 }
 
 void TFTupdCRCErr() {
+  if (guiCache.crcValid && guiCache.crc == crcErr) return;
+  guiCache.crc = crcErr;
+  guiCache.crcValid = 1;
   tft.setCursor(0, 20);
   tft.print("CRE:");
   printHex2(crcErr);
 }
 
 void TFTupdUsage() {
+  byte current = getRXBufUsagePercent();
+  if (guiCache.usgValid && guiCache.usg == current && rxOVFlow == 0) return;
+  guiCache.usg = current;
+  guiCache.usgValid = 1;
   tft.setCursor(0, 40);
   tft.print("USG:");
-  usage = getRXBufUsagePercent();
   if (rxOVFlow > 0) {
-    tft.println("OF");
+    tft.print("OF");
   } else {
-    printDec2(usage);
+    printDec2(current);
   }
 }
 
 void TFTupdRNData() {
+  if (guiCache.rndValid && guiCache.rnd == randVal) return;
+  guiCache.rnd = randVal;
+  guiCache.rndValid = 1;
   tft.setCursor(80, 20);
   tft.print("RND:");
-  if (randVal < 0x10) tft.print('0');
-  tft.println(randVal, HEX);
+  printHex2(randVal);
 }
 
 void checkButton() {
@@ -449,7 +492,6 @@ void toggleRole() {
     storeUID();
     rxdClear();
     crcErr = 0;
-    usage = 0;
     randVal = 0x00;
     uidUpdated = 1;
     creUpdated = 1;
@@ -461,7 +503,6 @@ void toggleRole() {
     storeUID();
     rxdClear();
     crcErr = 0;
-    usage = 0;
     randVal = randomGen();
     uidUpdated = 1;
     rxdUpdated = 1;

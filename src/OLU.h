@@ -185,7 +185,6 @@ byte dest = 0;  // Destination UID
 byte cmd = 0;   // Command No.
 
 byte randVal;                 // Random value
-byte usage = 0;               // Ring buffer usage
 byte crcErr = 0;              // Number of CRC errors
 byte rxOVFlow = 0;            // Number of Rx buffer overflow
 byte userData[PAYLOAD_SIZE];  // User data
