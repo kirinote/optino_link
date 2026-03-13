@@ -248,7 +248,7 @@ void handleUsbToRing() {
 /* Optical Ring to USB bridge
  *
  * Behavior:
- *   - Sends latest consumed packet to USB.
+ *   - Sends the latest deliverToUsb packet to USB.
  *   - Transfers DATA_LENGTH bytes (CRC excluded).
  *
  * Buffer policy:

@@ -196,7 +196,7 @@ void loop() {
  */
 void parsePacket() {
 
-  bool consumed = 0;
+  bool deliverToUsb = 0;
   bool fromMe = (rxd[2] == uid);
   bool notForMe = (rxd[1] != uid && rxd[1] != ACT_UNITS);
   bool notAssign = (rxd[3] != ASSIGN);
@@ -282,7 +282,7 @@ void parsePacket() {
   else if (rxd[1] == uid && rxd[3] == OUT_CTRL) {
     FourBitOut(rxd[4] & 0x0F);
     rxdUpdated = 1;
-    consumed = 1;
+    deliverToUsb = 1;
   }
 
   /* Transport characteristics:
@@ -297,23 +297,23 @@ void parsePacket() {
     userData[0] = randVal;
     optTX(rxd[2], RESPONSE);
     rxdUpdated = 1;
-    consumed = 1;
+    deliverToUsb = 1;
   }
 
   else if (rxd[1] == uid && rxd[3] == RESPONSE) {
     /* Store the application payload in the work array */
     rxd2work();
     rxdUpdated = 1;
-    consumed = 1;
+    deliverToUsb = 1;
   }
 
 /* Single-slot overwrite buffer:
- * Always stores the latest consumed packet.
+ * Stores the latest packet marked for USB delivery.
  * Older packets are intentionally overwritten
  * if USB transmission is delayed.
  */
 #ifdef ENABLE_PC_COMM
-  if (consumed) {
+  if (deliverToUsb) {
     copyData(bridgeRx, rxd);
   }
 #endif
