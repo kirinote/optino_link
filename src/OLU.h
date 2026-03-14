@@ -109,8 +109,10 @@
 #define REQUEST 0x05
 #define RESPONSE 0x06
 
-#define EXT_EEPROM_ADDR 0x50
 #define EEPROM_UID_ADDR 0x0000
+
+/* SparkFun Qwiic EEPROM Breakout CAT24C512 */
+#define EXT_EEPROM_ADDR 0x50
 
 /* 0x00 = repeater role
  * Transparent forwarding unit.
