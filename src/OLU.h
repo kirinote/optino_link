@@ -77,13 +77,22 @@
  */
 
 #include <SPI.h>
+#include <Wire.h>
 #include <EEPROM.h>
 #include <Adafruit_GFX.h>
 #include <Adafruit_ST7735.h>
 
 /* Conditional compilation */
 //#define PERSISTENT_UID
+//#define USE_EXT_EEPROM
 #define ENABLE_PC_COMM
+
+#if defined(USE_EXT_EEPROM) && !defined(PERSISTENT_UID)
+#error "USE_EXT_EEPROM requires PERSISTENT_UID to be defined."
+#endif
+#if defined(USE_EXT_EEPROM) && !defined(ARDUINO_UNOR4_WIFI)
+#warning "External EEPROM is intended for UNO R4 WiFi."
+#endif
 
 #define TFT_SCLK 13
 #define TFT_MOSI 11
@@ -99,6 +108,9 @@
 #define IN_CAPT 0x04
 #define REQUEST 0x05
 #define RESPONSE 0x06
+
+#define EXT_EEPROM_ADDR 0x50
+#define EEPROM_UID_ADDR 0x0000
 
 /* 0x00 = repeater role
  * Transparent forwarding unit.

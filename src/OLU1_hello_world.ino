@@ -24,6 +24,11 @@ inline void resetParser() {
 
 void setup(void) {
 
+#ifdef USE_EXT_EEPROM
+  Wire1.begin();
+  Wire1.setClock(400000);
+#endif
+
 #ifdef ENABLE_PC_COMM
   Serial.begin(115200);
   uint32_t start = millis();
@@ -232,6 +237,11 @@ void parsePacket() {
     if (newHost && rxd[2] == uid) {
       assignLock = 0;
       newHost = 0;
+#ifdef PERSISTENT_UID
+      if (uid != 0xFF && uid != ACT_UNITS) {
+        storeUID();
+      }
+#endif
       userData[0] = 0x00;
       optTX(ACT_UNITS, ASSIGN_DONE);
       randVal = randomGen();

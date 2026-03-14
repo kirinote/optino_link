@@ -475,14 +475,23 @@ void clearData(byte *buf) {
 }
 
 void storeUID() {
-#ifdef PERSISTENT_UID
-  EEPROM.update(0, uid);
+#ifdef USE_EXT_EEPROM
+  extEEPROM_writeByte(EEPROM_UID_ADDR, uid);
+#elif defined(PERSISTENT_UID)
+  EEPROM.update(EEPROM_UID_ADDR, uid);
 #endif
 }
 
 void restoreUID() {
-#ifdef PERSISTENT_UID
-  byte stored = EEPROM.read(0);
+  byte stored = 0xFF;
+#ifdef USE_EXT_EEPROM
+  stored = extEEPROM_readByte(EEPROM_UID_ADDR);
+#elif defined(PERSISTENT_UID)
+  stored = EEPROM.read(EEPROM_UID_ADDR);
+#else
+  uid = 0xFF;
+  return;
+#endif
 
   /* 0xFE is broadcast-only and must never be stored */
   if (stored == ACT_UNITS) {
@@ -490,9 +499,6 @@ void restoreUID() {
   } else {
     uid = stored;
   }
-#else
-  uid = 0xFF;
-#endif
 }
 
 void toggleRole() {
@@ -524,6 +530,28 @@ void toggleRole() {
     initGUI();
   }
 }
+
+#ifdef USE_EXT_EEPROM
+byte extEEPROM_readByte(uint16_t addr) {
+  Wire1.beginTransmission(EXT_EEPROM_ADDR);
+  Wire1.write((addr >> 8) & 0xFF);
+  Wire1.write(addr & 0xFF);
+  Wire1.endTransmission(false);
+  Wire1.requestFrom(EXT_EEPROM_ADDR, 1);
+  if (Wire1.available())
+    return Wire1.read();
+  return 0xFF;
+}
+
+void extEEPROM_writeByte(uint16_t addr, byte data) {
+  Wire1.beginTransmission(EXT_EEPROM_ADDR);
+  Wire1.write((addr >> 8) & 0xFF);
+  Wire1.write(addr & 0xFF);
+  Wire1.write(data);
+  Wire1.endTransmission();
+  delay(6);
+}
+#endif
 
 /* Reserved functions for future use
 byte packData(byte foo, byte command) {
