@@ -32,7 +32,7 @@ void setup(void) {
 #ifdef ENABLE_PC_COMM
   Serial.begin(115200);
   uint32_t start = millis();
-  while (!Serial && (millis() - start < 5000)) {};
+  while (!Serial && (millis() - start < 2000)) {};
 #endif
 
   restoreUID();
