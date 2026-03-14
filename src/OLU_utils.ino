@@ -475,6 +475,7 @@ void clearData(byte *buf) {
 }
 
 void storeUID() {
+  if (uid == ACT_UNITS) uid = 0xFF;
 #ifdef USE_EXT_EEPROM
   extEEPROM_writeByte(EEPROM_UID_ADDR, uid);
 #elif defined(PERSISTENT_UID)

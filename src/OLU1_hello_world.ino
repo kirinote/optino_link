@@ -238,9 +238,7 @@ void parsePacket() {
       assignLock = 0;
       newHost = 0;
 #ifdef PERSISTENT_UID
-      if (uid != 0xFF && uid != ACT_UNITS) {
-        storeUID();
-      }
+      storeUID();
 #endif
       userData[0] = 0x00;
       optTX(ACT_UNITS, ASSIGN_DONE);
@@ -283,9 +281,7 @@ void parsePacket() {
       OptLink.write(rxd, PACKET_SIZE);
     }
 #ifdef PERSISTENT_UID
-    if (uid != 0xFF && uid != ACT_UNITS) {
-      storeUID();
-    }
+    storeUID();
 #endif
   }
 
