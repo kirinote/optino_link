@@ -78,7 +78,7 @@ Pressing K4 on `0xFF` and `0x00` units toggles these UIDs. This is a feature for
 **\[Ch.1:OTX&emsp;Ch2:ORX&emsp;50uSec/div\]** This is the waveform when four units are connected. The ASSIGN command issued from the host propagated to the three downstream units and was received back at the host after 260 uSec. This calculates to an additional 90 uSec of delay for each unit added. If downstream units also require the received data, the transfer process must be prioritized.
 
 ## Technical restriction
-The UART port used by this shield conflicts with the I2C port on the UNO R4 Minima. However, the UNO R4 Wifi includes an additional I2C port called Qwiic, so this specification will not cause issues when implementing it in a network.
+The UART port used by this shield conflicts with the I2C port on the UNO R4 Minima. However, the UNO R4 WiFi includes an additional I2C port called Qwiic, so this specification will not cause issues when implementing it in a network. This sketch uses the 3.3V SparkFun Qwiic EEPROM Breakout as external non-volatile memory.
 
 ## Reference board
 ![Reference board](./img/reference.png)
