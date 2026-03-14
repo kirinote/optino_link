@@ -110,8 +110,6 @@
 #define RESPONSE 0x06
 
 #define EEPROM_UID_ADDR 0x0000
-
-/* SparkFun Qwiic EEPROM Breakout CAT24C512 */
 #define EXT_EEPROM_ADDR 0x50
 
 /* 0x00 = repeater role
