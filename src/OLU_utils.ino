@@ -260,11 +260,9 @@ void handleUsbToRing() {
  */
 #ifdef ENABLE_PC_COMM
 void handleRingToUsb() {
-  if (Serial && bridgeRx[0] == HEADER) {
-    if (Serial.availableForWrite() >= DATA_LENGTH) {
-      Serial.write(bridgeRx, DATA_LENGTH);
-      clearData(bridgeRx);
-    }
+  if (bridgeRx[0] == HEADER) {
+    Serial.write(bridgeRx, DATA_LENGTH);
+    clearData(bridgeRx);
   }
 }
 #endif
