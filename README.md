@@ -64,7 +64,7 @@ Pressing K2, the unit requests data transfer from `0x02`. The receiving `0x02` t
 
 Pressing K3 sends data to `0x02`.
 
-Pressing K4 on a unit assigned a UID by the host sends data to `0x03`. Unlike K3, there is a 1/10 probability that the data will be corrupted. The receiving unit detects the corruption via CRC checking, discards the packet, and simultaneously increments the CRE value indicating the number of detected CRC errors. If this packet was relayed, `0x03` will not receive the corrupted packet.
+Pressing K4 sends data to `0x03`. Unlike K3, there is a 1/10 probability that the data will be corrupted. The receiving unit detects the corruption via CRC checking, discards the packet, and simultaneously increments the CRE value indicating the number of detected CRC errors. If this packet was relayed, `0x03` will not receive the corrupted packet.
 
 Pressing K4 on `0xFF` and `0x00` units toggles these UIDs. This is a feature for experimenting with what role each one plays.
 
