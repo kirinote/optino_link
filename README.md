@@ -1,13 +1,13 @@
 # Optino Link
 
 ## Overview
-![OLU1 image](./img/OLU1.png)
-
 Optino Link is a plastic optical fiber communication design concept intended for use with the Arduino UNO R4.
 
 It enables the construction of high-speed, long-distance ring networks with a device-to-device distance of 20 meters or a maximum speed of 4 Mbps using Renesas RA4M1 based Arduino.
 
 When handling fixed-length data, you can control the network without complex knowledge. Simply determine the payload count and place the data into the transmission array.
+
+![OLU1 image](./img/OLU1.png)
 
 ## How it works
 Optino Link units have no distinction between host and device; their role is determined by commands.
