@@ -70,6 +70,13 @@ Pressing K4 sends data to `0x03`. Unlike K3, there is a 1/10 probability that th
 
 Pressing K4 on `0xFF` and `0x00` units toggles these UIDs. This is a feature for experimenting with what role each one plays.
 
+## PC-based network control
+Defining ENABLE_PC_COMM allows the PC to communicate with the unit via a USB connection.
+
+The PC uses its UID to access the optical ring. The procedure simply involves sending data in hexadecimal format to the corresponding COM port. There is no implementation of a ring buffer or data integrity verification functionality. The unit adds a CRC checksum to the raw data received from the PC and transmits the packet to the optical ring.
+
+Packets addressed to the PC's own UID are forwarded to the PC after the CRC checksum is removed. As a result, the PC intercepts all received data, including results sent by the connected unit itself.
+
 ## Waveforms
 ![OSC_Header](./img/osc_header.png)
 
