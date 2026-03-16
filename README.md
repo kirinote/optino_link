@@ -77,8 +77,6 @@ The PC uses its UID to access the optical ring. The procedure simply involves se
 
 Packets addressed to the PC's own UID are forwarded to the PC after the CRC checksum is removed. As a result, the PC intercepts all received data, including results sent by the connected unit itself.
 
-![CoolTerm](./img/coolterm.png)
-
 ## Waveforms
 ![OSC_Header](./img/osc_header.png)
 
