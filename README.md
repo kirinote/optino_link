@@ -62,6 +62,8 @@ Pressing K1 designates that unit as UID `0x01`, the host, which issues ASSIGN co
 
 Units newly set to `0x01` by this operation temporarily set the newHost flag and clear it once assign is complete. Units previously set to `0x01` recognize via the newHost flag that they are not the source, update their own UID, and forward the ASSIGN command.
 
+When a new host detects that the ASSIGN command has completed its cycle, it immediately issues an ASSIGN_DONE command to finalize the UIDs for each unit. This command includes the highest-order UID information, allowing all active units to share the network's scope. This is applied to a filter that prevents undeliverable packets from lingering within the optical ring.
+
 Pressing K2, the unit requests data transfer from `0x02`. The receiving `0x02` transfers data to the requesting unit.
 
 Pressing K3 sends data to `0x02`.
