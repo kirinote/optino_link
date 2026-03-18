@@ -207,6 +207,32 @@ void parsePacket() {
   bool notForMe = (rxd[1] != uid && rxd[1] != ACT_UNITS);
   bool notAssign = (rxd[3] != ASSIGN);
 
+  /* Invalid destination filtering
+   * Drop packets targeting non-existent UID to prevent ring circulation.
+   *
+   * Condition:
+   *   dest > highestUID AND dest <= UID_MAX
+   *
+   * Exclusions:
+   *   - Broadcast (0xFE)
+   *   - Unassigned (0xFF)
+   *   - Repeater (0x00) [safety exclusion]
+   *
+   * Note:
+   *   highestUID == 0xFF means "unknown / not assigned yet"
+   *   -> filtering is disabled in that state.
+   */
+  if (highestUID != 0xFF) {
+    byte destUID = rxd[1];
+    // clang-format off
+    if (destUID != ACT_UNITS && 
+        destUID != 0xFF &&
+        destUID != REPEATER &&
+        destUID > highestUID &&
+        destUID <= UID_MAX) return;
+    // clang-format on
+  }
+
   if (fromMe && notAssign) return;
 
   /* Repeater:
