@@ -187,8 +187,9 @@ const int buttonPins[4] = { A0, A1, A2, A3 };
 const int inputPins[4] = { D0, D1, D2, D3 };
 const int outputPins[4] = { D4, D5, D6, D7 };
 bool lastStates[4] = { 0, 0, 0, 0 };
-bool newHost = 0;  // Source of Assign command
-byte uid = 0xFF;   // My UID
+bool newHost = 0;        // Source of Assign command
+byte uid = 0xFF;         // My UID
+byte highestUID = 0xFF;  // Highest UID assigned in the last ASSIGN cycle
 
 /* Global TX context:
  * Reserved for future asynchronous TX state handling.

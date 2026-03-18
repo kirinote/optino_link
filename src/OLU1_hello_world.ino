@@ -133,6 +133,7 @@ void loop() {
       assignLock = 0;
       newHost = 0;
       crcErr = 0;
+      highestUID = 0xFF;
 
       /* Reset UID to unassigned */
       if (uid != 0xFF) {
@@ -240,7 +241,8 @@ void parsePacket() {
 #ifdef PERSISTENT_UID
       storeUID();
 #endif
-      userData[0] = 0x00;
+      highestUID = rxd[4];
+      userData[0] = highestUID;
       optTX(ACT_UNITS, ASSIGN_DONE);
       randVal = randomGen();
       crcErr = 0;
@@ -276,6 +278,7 @@ void parsePacket() {
   }
 
   else if (rxd[3] == ASSIGN_DONE) {
+    highestUID = rxd[4];
     assignLock = 0;
     if (uid == REPEATER || rxd[2] != uid) {
       OptLink.write(rxd, PACKET_SIZE);
