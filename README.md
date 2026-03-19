@@ -25,7 +25,7 @@ Optino Link is not a standards organization, so feel free to modify it as you li
 ## Reserved Unit ID
 - `0x00` Repeater, Static UID unit. Used to physically extend the data transmission distance. Received packets are inspected for corruption and forwarded immediately if no issues are found. Corrupted packets are counted and discarded. On screen, it may be displayed as `RP`.
 - `0xFE` Broadcast, All Active UID units. No unit with this UID exists. UID preceding the Unassigned unit.
-- `0xFF` Unassigned, Active UID unit. Until an UID is assigned, it forwards received packets like a Repeater. In principle, commands can be issued without disrupting the network. This is due to the factory default EEPROM being formatted with 0xFF.
+- `0xFF` Unassigned, Active UID unit. Until an UID is assigned, it forwards received packets like a Repeater. In principle, commands can be issued without disrupting the network. The reason why the initial value of the UID was defined as 0xFF is that the memory area in the EEPROM is typically initialized to 0xFF at the factory. If the UID is expanded to 2 bytes in the future to accommodate a larger number of connected units, it will become 0xFFFF, and the broadcast command will likely be 0xFFFE.
 
 ## Optino Link Standard
 This specification focuses primarily on being composed solely of the most affordable and readily available devices. Regardless of who designs it, only devices that meet the following functions can be called an Optino Link Unit. This is a compatibility issue.
