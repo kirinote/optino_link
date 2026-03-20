@@ -195,7 +195,7 @@ void startAssignAsHost() {
   newHost = 1;
   uid = 0x01;
   userData[0] = uid;
-  optTX(ACT_UNITS, ASSIGN);
+  optTX(DYN_UNITS, ASSIGN);
   uidUpdated = 1;
   rxdUpdated = 1;
   creUpdated = 1;
@@ -475,7 +475,7 @@ void clearData(byte *buf) {
 }
 
 void storeUID() {
-  if (uid == ACT_UNITS) uid = 0xFF;
+  if (uid == DYN_UNITS) uid = 0xFF;
 #ifdef USE_EXT_EEPROM
   extEEPROM_writeByte(EEPROM_UID_ADDR, uid);
 #elif defined(PERSISTENT_UID)
@@ -495,7 +495,7 @@ void restoreUID() {
 #endif
 
   /* 0xFE is broadcast-only and must never be stored */
-  if (stored == ACT_UNITS) {
+  if (stored == DYN_UNITS) {
     uid = 0xFF;
   } else {
     uid = stored;

@@ -48,8 +48,8 @@
  * 
  * Reserved UID:
  *   0x00 - Repeater, Static UID unit
- *   0xFE - Broadcast, All Active UID units
- *   0xFF - Unassigned, Active UID unit
+ *   0xFE - Broadcast, All Dynamic UID units
+ *   0xFF - Unassigned, Dynamic UID unit
  *
  * Command:
  *   0x00 - Not applicable
@@ -133,7 +133,7 @@
 /* 0xFE = broadcast to assigned units only.
  * 0xFF excluded by design.
  */
-#define ACT_UNITS 0xFE
+#define DYN_UNITS 0xFE
 
 /* PWM duty inverted.
  * TFT display backlight is turned off by conducting

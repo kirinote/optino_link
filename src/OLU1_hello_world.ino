@@ -165,7 +165,7 @@ void loop() {
  * Unit roles:
  *   - Host (initiates ASSIGN)
  *   - Repeater (UID=0x00)
- *   - Active Unit (UID=0x01-0xFD)
+ *   - Dynamic Unit (UID=0x01-0xFD)
  *
  * Assignment sequence:
  * Each downstream unit overwrites its current UID
@@ -204,7 +204,7 @@ void parsePacket() {
 
   bool deliverToUsb = 0;
   bool fromMe = (rxd[2] == uid);
-  bool notForMe = (rxd[1] != uid && rxd[1] != ACT_UNITS);
+  bool notForMe = (rxd[1] != uid && rxd[1] != DYN_UNITS);
   bool notAssign = (rxd[3] != ASSIGN);
 
   /* Invalid destination filtering
@@ -225,7 +225,7 @@ void parsePacket() {
   if (highestUID != 0xFF) {
     byte destUID = rxd[1];
     // clang-format off
-    if (destUID != ACT_UNITS && 
+    if (destUID != DYN_UNITS && 
         destUID != 0xFF &&
         destUID != REPEATER &&
         destUID > highestUID &&
@@ -245,7 +245,7 @@ void parsePacket() {
   }
 
   /* Forward packet when not addressed to this unit
-   * (non-ASSIGN only, active units only)
+   * (non-ASSIGN only, dynamic units only)
    */
   else if (notForMe && notAssign) {
     OptLink.write(rxd, PACKET_SIZE);
@@ -269,7 +269,7 @@ void parsePacket() {
 #endif
       highestUID = rxd[4];
       userData[0] = highestUID;
-      optTX(ACT_UNITS, ASSIGN_DONE);
+      optTX(DYN_UNITS, ASSIGN_DONE);
       randVal = randomGen();
       crcErr = 0;
       rxdUpdated = 1;
