@@ -204,43 +204,75 @@ void startAssignAsHost() {
 
 /* USB to Optical Ring bridge
  *
+ * Overview:
+ *   Transfers fixed-length frames from USB to the optical ring.
+ *
+ * Input handling:
+ *   - Performs header-based resynchronization (HEADER = 0x55)
+ *   - Discards bytes until a valid HEADER is detected
+ *   - Processes only when DATA_LENGTH bytes are available
+ *     after synchronization
+ *
+ * Validation:
+ *   - HEADER is validated (defensive check)
+ *   - CRC is NOT validated on USB ingress (trusted link)
+ *
  * Behavior:
- *   - Waits for DATA_LENGTH bytes from USB.
- *   - Validates HEADER only (no CRC on USB side).
- *   - If ASSIGN and no active process:
- *       starts host-side enumeration.
- *   - Otherwise:
- *       regenerates CRC and forwards to ring.
+ *   - ASSIGN command:
+ *       Starts host-side enumeration if not already active
+ *   - Other commands:
+ *       CRC is regenerated and frame is forwarded to the ring
  *
- * Design rule:
- *   USB link is trusted.
- *   CRC protection applies only to ring segment.
+ * Design assumptions:
+ *   - USB is reliable, point-to-point
+ *   - Frame alignment may break, but is recoverable via HEADER sync
+ *   - CRC protection is applied only on the optical ring segment
  *
- * Note:
- *   Input is fixed-length and blocking only
- *   when sufficient bytes are available.
+ * Notes:
+ *   - Non-blocking: returns if insufficient data
+ *   - Fixed-length protocol (no delimiter-based framing)
  */
 #ifdef ENABLE_PC_COMM
 void handleUsbToRing() {
+
+  /* Header resynchronization:
+   * Discard bytes until HEADER is found.
+   * This prevents permanent desync on USB stream.
+   */
+  while (Serial.available() && Serial.peek() != HEADER) {
+    Serial.read();
+  }
+
+  /* Wait until full frame is available */
   if (Serial.available() < DATA_LENGTH) {
     return;
   }
+
+  /* Read fixed-length frame */
   for (byte i = 0; i < DATA_LENGTH; i++) {
     bridgeTx[i] = Serial.read();
   }
+
+  /* Header validation (redundant but safe) */
   if (bridgeTx[0] != HEADER) {
     clearData(bridgeTx);
     return;
   }
+
+  /* ASSIGN consumes frame (not forwarded) */
   if (bridgeTx[3] == ASSIGN) {
     if (!assignLock) {
       startAssignAsHost();
     }
-  } else {
+  }
+
+  /* Forward to optical ring with regenerated CRC */
+  else {
     copyData(txd, bridgeTx);
     txd[DATA_LENGTH] = calcCRC8(txd, DATA_LENGTH);
     OptLink.write(txd, PACKET_SIZE);
   }
+
   clearData(bridgeTx);
 }
 #endif
