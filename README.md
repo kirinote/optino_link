@@ -20,7 +20,7 @@ The current design allows for 256 different command definitions using 1 byte, bu
 
 For example, an application could use the upper 4 bits to define the payload length, indicating that up to 16 bytes of user data can be stored. This is necessary when handling variable-length data in the future. Alternatively, the upper 4 bits could be utilized for managing multiple networks on a single host.
 
-Optino Link is not a standards organization, so feel free to modify it as you like and enjoy it.
+Optino Link is a brand new transfer protocol and is not aligned with any of the existing standards organizations, so feel free to modify it for use as you see fit.
 
 ## Reserved Unit ID
 - `0x00` Repeater, Static UID unit. Used to physically extend the data transmission distance. Received packets are inspected for corruption and forwarded immediately if no issues are found. Corrupted packets are counted and discarded. On screen, it may be displayed as `RP`.
@@ -28,7 +28,7 @@ Optino Link is not a standards organization, so feel free to modify it as you li
 - `0xFF` Unassigned, Dynamic UID unit. Until an UID is assigned, it forwards received packets like a Repeater. In principle, commands can be issued without disrupting the network. The reason why the initial value of the UID was defined as 0xFF is that the memory area in the EEPROM is typically initialized to 0xFF at the factory. If the UID is expanded to 2 bytes in the future to accommodate a larger number of connected units, it will become 0xFFFF, and the broadcast command will likely be 0xFFFE.
 
 ## Optino Link Standard
-This specification focuses primarily on being composed solely of the most affordable and readily available devices. Regardless of who designs it, only devices that meet the following functions can be called an Optino Link Unit. This is a compatibility issue.
+This specification focuses primarily on being composed solely of the most affordable and readily available devices. Regardless of who designs it, only devices that meet the following functions can be called an Optino Link Unit. As such, the following are the basic requirements for Optino Link compatibility.
 
 - Depends on an Arduino UNO R4 or compatible system
 - Optical fiber module using the Broadcom HFBR-0500Z Series
@@ -38,7 +38,7 @@ This specification focuses primarily on being composed solely of the most afford
 
 The small size of the LCD display is because updating the display is a very heavy processing task for the communication unit. Also, since computational resources cannot be allocated to debounce key inputs, the signal must be shaped using a filter on the circuit side.
 
-To reduce the number of parts, it is preferable to adopt a module that integrates the TFT display and keys. Although the manufacturer is unknown, such modules can be obtained on AliExpress. An excellent component that implements a minimal UI with a small footprint.
+To reduce the number of parts, it is preferable to adopt a module that integrates the TFT display and keys. Although the manufacturer is unknown, such modules can be readily and reasonably obtained on AliExpress, and serve as an excellent component that implements a minimal UI with a small footprint.
 
 ![Display module](./img/display.png)
 
@@ -94,7 +94,7 @@ The UART port used by this shield conflicts with the I2C port on the UNO R4 Mini
 ## Reference board
 ![Reference board](./img/reference.png)
 
-I am distributing the Gerber data for the OLU-1 reference board free of charge. I would like to assess the level of demand, so I will manage the distribution of this data for the time being. Please request the complete set of data from [Kirinote Contact Form](http://148.135.74.205:10000/app/my-workspace/kirinote-contact-form).
+The designer is distributing the Gerber files for the OLU-1 reference board free of charge. To gauge demand, the designer will manage the distribution of these files for the time being. Please request the complete set of data from [Kirinote Contact Form](http://148.135.74.205:10000/app/my-workspace/kirinote-contact-form).
 
 ## Branding
 The font used for the logo expressing the 'Optino Link' concept is Barlow ExtraBold.
